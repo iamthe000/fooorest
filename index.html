@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>fooorest</title>
+<style>
+    
+    @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700&display=swap');
+    
+    body { font-family: 'M PLUS Rounded 1c', sans-serif; background-color: #f8fafc; color: #333; margin: 0; padding: 0; }
+    h1, h2, h3 { text-align: center; margin: 10px 0; color: #1e293b; }
+    
+    
+    .nav-tabs { display: flex; justify-content: space-around; background: #fff; padding: 10px 5px 0; border-bottom: 4px solid #1e293b; }
+    .nav-btn { flex: 1; background-color: #e2e8f0; color: #475569; border: 3px solid #1e293b; border-bottom: none; padding: 12px 0; font-size: 14px; font-weight: bold; border-radius: 12px 12px 0 0; margin: 0 4px; cursor: pointer; transition: 0.2s; }
+    .nav-btn.active { background-color: #fb923c; color: #fff; transform: translateY(-4px); box-shadow: 0 4px 0 #1e293b inset; }
+
+    
+    .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+    .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    
+    input[type="text"], input[type="number"] { padding: 8px; border: 3px solid #1e293b; border-radius: 8px; font-family: inherit; font-weight: bold; font-size: 14px; width: calc(100% - 24px); margin-bottom: 10px;}
+    textarea { width: 100%; height: 100px; padding: 10px; border: 3px solid #1e293b; border-radius: 12px; font-family: monospace; box-sizing: border-box; resize: none; margin-bottom: 10px;}
+    .action-btn { width: 100%; padding: 15px; background-color: #3b82f6; color: white; font-weight: bold; font-size: 18px; border: 3px solid #1e293b; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0 #1e293b; transition: 0.1s; margin-bottom: 15px; font-family: inherit;}
+    .action-btn:active { transform: translateY(4px); box-shadow: 0 0px 0 #1e293b; }
+
+    
+    .editor-wrapper { text-align: center; margin-bottom: 20px; }
+    canvas { border: 4px solid #1e293b; border-radius: 12px; background: white; cursor: crosshair; touch-action: none; }
+    .color-palette { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+    .color-btn { width: 30px; height: 30px; border: 3px solid #1e293b; border-radius: 50%; cursor: pointer; }
+    .color-btn.active { transform: scale(1.2); outline: 2px solid #fb923c; outline-offset: 2px; }
+
+    
+    .battle-layout { display: flex; flex-direction: column; gap: 20px; }
+    
+    .character-card { background-color: #cbd5e1; border: 4px solid #1e3a8a; border-radius: 20px; padding: 12px; display: flex; justify-content: space-between; align-items: stretch; box-shadow: 0 6px 0px rgba(30,58,138,0.2); transition: transform 0.1s; }
+    
+    
+    .card-moves { display: flex; flex-direction: column; justify-content: space-between; gap: 5px; width: 60px;}
+    .move-icon-wrapper { text-align: center; font-size: 10px; font-weight: bold; color: #333;}
+    .move-icon { background: #f97316; border: 3px solid #1e3a8a; border-radius: 12px; width: 50px; height: 50px; margin: 0 auto; display: flex; justify-content: center; align-items: center; font-size: 24px; color: white; box-shadow: 0 3px 0 #1e3a8a; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .move-icon.active { transform: scale(1.2); background: #fef08a; border-color: #ca8a04; box-shadow: 0 0 15px #fef08a; color: #ca8a04; z-index: 10;}
+
+    
+    .card-bars { display: flex; gap: 8px; padding: 0 5px; }
+    .bar-wrapper { display: flex; flex-direction: column; align-items: center; height: 140px; }
+    .bar-outer { width: 20px; flex-grow: 1; background: #ef4444; border: 3px solid #1e3a8a; border-radius: 10px; overflow: hidden; position: relative; display: flex; flex-direction: column; justify-content: flex-end; }
+    .bar-inner { width: 100%; background: #22c55e; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); height: 100%; }
+    .bar-label { font-size: 12px; font-weight: bold; color: #333; margin-top: 4px; line-height: 1; text-align: center;}
+
+    
+    .card-info { flex-grow: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin-left: 10px;}
+    .author-badge { background: white; border: 3px solid #1e3a8a; border-radius: 20px; padding: 4px 15px; font-size: 14px; font-weight: bold; text-align: center; min-width: 80px; }
+    .pixel-art-display { background: white; border: 4px solid #1e3a8a; border-radius: 16px; width: 110px; height: 110px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+    .pixel-art-display img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+
+    
+    .battle-log-wrapper { background: #3b82f6; border: 4px solid #1e3a8a; border-radius: 16px; height: 220px; display: flex; flex-direction: column; box-shadow: 0 6px 0px rgba(30,58,138,0.2); margin-top: 10px;}
+    .battle-log-header { text-align: center; color: white; font-size: 20px; font-weight: bold; padding: 10px; text-shadow: 1px 1px 0 #1e3a8a, -1px -1px 0 #1e3a8a, 1px -1px 0 #1e3a8a, -1px 1px 0 #1e3a8a; letter-spacing: 2px;}
+    .battle-log-container { flex: 1; background: rgba(255,255,255,0.9); margin: 0 10px 10px 10px; border-radius: 10px; padding: 10px; overflow-y: auto; font-size: 14px; border: 2px solid #1e3a8a; font-family: sans-serif; font-weight: bold; color: #334155; }
+    .log-entry { margin-bottom: 8px; border-bottom: 2px dotted #cbd5e1; padding-bottom: 4px; animation: slideIn 0.2s ease-out;}
+    
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px) rotate(-2deg); } 75% { transform: translateX(5px) rotate(2deg); } }
+    .shaking { animation: shake 0.3s ease-in-out; }
+</style>
+</head>
+<body>
+
+<div class="nav-tabs">
+    <button class="nav-btn active" onclick="switchTab('create')">🎨 作成</button>
+    <button class="nav-btn" onclick="switchTab('load')">📥 対戦準備</button>
+    <button class="nav-btn" onclick="switchTab('learn')">🧠 学習</button>
+    <button class="nav-btn" onclick="switchTab('battle')">⚔️ バトル</button>
+</div>
+
+<div class="container">
+    <div id="tab-create" class="tab-content active">
+        <h2>キャラをつくる</h2>
+        <div style="text-align:center; margin-bottom: 15px;">
+            <input type="file" id="file_edit" accept=".json" style="display:none;">
+            <button class="action-btn" style="width:auto; padding:8px 15px; background-color:#8b5cf6; box-shadow:0 4px 0 #5b21b6; margin-bottom:0;" onclick="document.getElementById('file_edit').click()">セーブデータを読み込む</button>
+        </div>
+        
+        <div class="editor-wrapper">
+            <h3 style="font-size: 14px;">ドット絵をかこう！</h3>
+            <canvas id="pixelCanvas" width="160" height="160"></canvas>
+            <div class="color-palette">
+                <div class="color-btn active" style="background: #000;" onclick="setColor('#000', this)"></div>
+                <div class="color-btn" style="background: #ef4444;" onclick="setColor('#ef4444', this)"></div>
+                <div class="color-btn" style="background: #3b82f6;" onclick="setColor('#3b82f6', this)"></div>
+                <div class="color-btn" style="background: #22c55e;" onclick="setColor('#22c55e', this)"></div>
+                <div class="color-btn" style="background: #eab308;" onclick="setColor('#eab308', this)"></div>
+                <div class="color-btn" style="background: #fff; border-color: #ccc;" onclick="setColor('#fff', this)">消</div>
+            </div>
+            <div style="margin-top: 10px; display: flex; justify-content: center; gap: 10px;">
+                <button id="tool-pen" onclick="setTool('pen')" style="padding: 5px 15px; border-radius: 20px; border: 2px solid #333; background: #fb923c; color: white; font-weight: bold;">ペン</button>
+                <button id="tool-bucket" onclick="setTool('bucket')" style="padding: 5px 15px; border-radius: 20px; border: 2px solid #333; background: #eee; font-weight: bold;">バケツ</button>
+                <button onclick="clearCanvas()" style="padding: 5px 15px; border-radius: 20px; border: 2px solid #333; background: #eee; font-weight: bold;">ぜんぶ消す</button>
+            </div>
+        </div>
+
+        <div style="background: #e2e8f0; padding: 15px; border-radius: 16px; border: 3px solid #1e293b; margin-bottom: 20px;">
+            <label>キャラ名</label><input type="text" id="c_name" value="勇者ドット">
+            <label>作者名</label><input type="text" id="c_author" value="あなた">
+            <div style="margin-bottom: 15px;">
+                <label>ステータス振り分け (合計: <span id="stat_total">150</span>)</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label>HP</label>
+                    <input type="range" id="c_hp_range" min="10" max="140" value="100" style="flex:1;">
+                    <span id="c_hp_val" style="width: 40px; font-weight: bold; text-align: right;">100</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                    <label>MP</label>
+                    <input type="range" id="c_mp_range" min="10" max="140" value="50" style="flex:1;" disabled>
+                    <span id="c_mp_val" style="width: 40px; font-weight: bold; text-align: right;">50</span>
+                </div>
+                <input type="hidden" id="c_hp" value="100">
+                <input type="hidden" id="c_mp" value="50">
+            </div>
+            <hr style="border: 1px dashed #94a3b8; margin: 15px 0;">
+            <label>わざ1</label>
+            <div style="display: flex; gap:10px; margin-bottom: 5px;">
+                <input type="text" id="m1_name" value="パンチ" placeholder="わざ名" style="flex:1; margin-bottom:0;">
+                <select id="m1_asset" style="padding:8px; border-radius:8px; border:3px solid #1e293b; font-weight:bold;">
+                    <option value="atk_low">弱攻撃 (威力10/MP0)</option>
+                    <option value="atk_mid">中攻撃 (威力30/MP15)</option>
+                    <option value="atk_high">強攻撃 (威力50/MP30)</option>
+                    <option value="heal_low">小回復 (回復30/MP10)</option>
+                    <option value="heal_mid">中回復 (回復50/MP20)</option>
+                    <option value="heal_high">大回復 (回復80/MP40)</option>
+                </select>
+            </div>
+            <label>わざ2</label>
+            <div style="display: flex; gap:10px; margin-bottom: 5px;">
+                <input type="text" id="m2_name" value="必殺斬り" placeholder="わざ名" style="flex:1; margin-bottom:0;">
+                <select id="m2_asset" style="padding:8px; border-radius:8px; border:3px solid #1e293b; font-weight:bold;">
+                    <option value="atk_low">弱攻撃 (威力10/MP0)</option>
+                    <option value="atk_mid" selected>中攻撃 (威力30/MP15)</option>
+                    <option value="atk_high">強攻撃 (威力50/MP30)</option>
+                    <option value="heal_low">小回復 (回復30/MP10)</option>
+                    <option value="heal_mid">中回復 (回復50/MP20)</option>
+                    <option value="heal_high">大回復 (回復80/MP40)</option>
+                </select>
+            </div>
+            <label>わざ3</label>
+            <div style="display: flex; gap:10px; margin-bottom: 10px;">
+                <input type="text" id="m3_name" value="ヒール" placeholder="わざ名" style="flex:1; margin-bottom:0;">
+                <select id="m3_asset" style="padding:8px; border-radius:8px; border:3px solid #1e293b; font-weight:bold;">
+                    <option value="atk_low">弱攻撃 (威力10/MP0)</option>
+                    <option value="atk_mid">中攻撃 (威力30/MP15)</option>
+                    <option value="atk_high">強攻撃 (威力50/MP30)</option>
+                    <option value="heal_low">小回復 (回復30/MP10)</option>
+                    <option value="heal_mid" selected>中回復 (回復50/MP20)</option>
+                    <option value="heal_high">大回復 (回復80/MP40)</option>
+                </select>
+            </div>
+        </div>
+        
+        <button class="action-btn" style="background-color: #22c55e; box-shadow: 0 4px 0 #166534;" onclick="exportJSON()">JSONを出力する</button>
+    </div>
+
+    <div id="tab-load" class="tab-content">
+        <h2>キャラをセット</h2>
+        <input type="file" id="file_p1" accept=".json" style="display:none;">
+        <input type="file" id="file_p2" accept=".json" style="display:none;">
+        <div style="display: flex; gap: 10px;">
+            <button class="action-btn" style="background-color: #ef4444; box-shadow: 0 4px 0 #991b1b;" onclick="document.getElementById('file_p1').click()">上(P1)にセット</button>
+            <button class="action-btn" style="background-color: #3b82f6; box-shadow: 0 4px 0 #1e40af;" onclick="document.getElementById('file_p2').click()">下(P2)にセット</button>
+        </div>
+        <div style="background: #e2e8f0; padding: 10px; border-radius: 12px; border: 3px solid #1e293b; text-align: center; margin-top: 10px;">
+            <p>P1: <span id="setup_p1" style="color:#ef4444; font-weight:bold;">未セット</span></p>
+            <p>P2: <span id="setup_p2" style="color:#3b82f6; font-weight:bold;">未セット</span></p>
+        </div>
+        <button class="action-btn" style="background-color: #a855f7; box-shadow: 0 4px 0 #6b21a8; margin-top: 20px;" onclick="loadSample()">サンプルキャラで遊ぶ</button>
+    </div>
+
+    <div id="tab-learn" class="tab-content">
+        <h2>AIをきたえる</h2>
+        <div style="background: #e2e8f0; padding: 15px; border-radius: 16px; border: 3px solid #1e293b; margin-bottom: 20px; text-align: center;">
+            <p>現在の自分のキャラ: <span id="learn_current_char" style="font-weight: bold; color: #ef4444;">未読込</span></p>
+            <p style="font-size: 14px; color: #475569;">※「作成」タブの内容を元に学習します</p>
+            <hr style="border: 1px dashed #94a3b8; margin: 15px 0;">
+            <p>1000回戦わせて最適な行動パターンを見つけます。</p>
+            <button class="action-btn" style="background-color: #f59e0b; box-shadow: 0 4px 0 #b45309;" onclick="startLearning()">高速学習スタート！</button>
+            <div id="learn_log" style="text-align: left; background: #fff; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; height: 120px; overflow-y: auto; font-size: 13px;">
+                ここに学習ログが出ます。
+            </div>
+        </div>
+        <button class="action-btn" style="background-color: #22c55e; box-shadow: 0 4px 0 #166534;" onclick="exportLearnedJSON()">学習済みJSONを出力する</button>
+    </div>
+
+    <div id="tab-battle" class="tab-content">
+        <button id="start-btn" class="action-btn" style="background-color: #fb923c; box-shadow: 0 4px 0 #c2410c; font-size: 22px; padding: 20px;" onclick="startBattle()">START BATTLE!!</button>
+
+        <div class="battle-layout">
+            
+            <div class="character-card" id="card1">
+                <div class="card-moves">
+                    <div class="move-icon-wrapper" id="move-wrap1-0">攻撃1<div class="move-icon" id="icon1-0">⚔️</div></div>
+                    <div class="move-icon-wrapper" id="move-wrap1-1">攻撃2<div class="move-icon" id="icon1-1">⚔️</div></div>
+                    <div class="move-icon-wrapper" id="move-wrap1-2">回復1<div class="move-icon" id="icon1-2">➕</div></div>
+                </div>
+                <div class="card-bars">
+                    <div class="bar-wrapper">
+                        <div class="bar-outer"><div class="bar-inner" id="mp-bar1"></div></div>
+                        <div class="bar-label">M<br>P</div>
+                    </div>
+                    <div class="bar-wrapper">
+                        <div class="bar-outer"><div class="bar-inner" id="hp-bar1"></div></div>
+                        <div class="bar-label">H<br>P</div>
+                    </div>
+                </div>
+                <div class="card-info">
+                    <div class="author-badge" id="author1">作者名</div>
+                    <div class="pixel-art-display"><img id="img1" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="P1"></div>
+                </div>
+            </div>
+
+            <div class="character-card" id="card2">
+                <div class="card-moves">
+                    <div class="move-icon-wrapper" id="move-wrap2-0">攻撃1<div class="move-icon" id="icon2-0">⚔️</div></div>
+                    <div class="move-icon-wrapper" id="move-wrap2-1">攻撃2<div class="move-icon" id="icon2-1">⚔️</div></div>
+                    <div class="move-icon-wrapper" id="move-wrap2-2">回復1<div class="move-icon" id="icon2-2">➕</div></div>
+                </div>
+                <div class="card-bars">
+                    <div class="bar-wrapper">
+                        <div class="bar-outer"><div class="bar-inner" id="mp-bar2"></div></div>
+                        <div class="bar-label">M<br>P</div>
+                    </div>
+                    <div class="bar-wrapper">
+                        <div class="bar-outer"><div class="bar-inner" id="hp-bar2"></div></div>
+                        <div class="bar-label">H<br>P</div>
+                    </div>
+                </div>
+                <div class="card-info">
+                    <div class="author-badge" id="author2">作者名</div>
+                    <div class="pixel-art-display"><img id="img2" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="P2"></div>
+                </div>
+            </div>
+
+            <div class="battle-log-wrapper">
+                <div class="battle-log-header">戦闘ログ</div>
+                <div class="battle-log-container" id="battle-log">
+                    <div class="log-entry" style="text-align:center; color:#64748b;">準備完了したらSTARTを押してね</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    
+    const canvas = document.getElementById('pixelCanvas');
+    const ctx = canvas.getContext('2d');
+    const gridSize = 16;
+    const pixelSize = canvas.width / gridSize;
+    let isDrawing = false;
+    let currentColor = '#000';
+    let currentTool = 'pen'; 
+
+    
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    function setTool(tool) {
+        currentTool = tool;
+        document.getElementById('tool-pen').style.background = tool === 'pen' ? '#fb923c' : '#eee';
+        document.getElementById('tool-pen').style.color = tool === 'pen' ? 'white' : '#333';
+        document.getElementById('tool-bucket').style.background = tool === 'bucket' ? '#fb923c' : '#eee';
+        document.getElementById('tool-bucket').style.color = tool === 'bucket' ? 'white' : '#333';
+    }
+
+    function setColor(color, btn) {
+        currentColor = color;
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function clearCanvas() {
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function hexToRgb(hex) {
+        if (hex === '#000') return [0, 0, 0, 255];
+        if (hex === '#ef4444') return [239, 68, 68, 255];
+        if (hex === '#3b82f6') return [59, 130, 246, 255];
+        if (hex === '#22c55e') return [34, 197, 94, 255];
+        if (hex === '#eab308') return [234, 179, 8, 255];
+        if (hex === '#fff') return [255, 255, 255, 255];
+        return [0, 0, 0, 255];
+    }
+
+    function fillPixel(startX, startY) {
+        const gridX = Math.floor(startX / pixelSize);
+        const gridY = Math.floor(startY / pixelSize);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        const targetColor = hexToRgb(currentColor);
+        
+        const startPos = (gridY * pixelSize * canvas.width + gridX * pixelSize) * 4;
+        const startR = data[startPos];
+        const startG = data[startPos + 1];
+        const startB = data[startPos + 2];
+        const startA = data[startPos + 3];
+        
+        if (startR === targetColor[0] && startG === targetColor[1] && startB === targetColor[2] && startA === targetColor[3]) {
+            return;
+        }
+
+        const stack = [[gridX, gridY]];
+        const visited = new Set();
+        
+        ctx.fillStyle = currentColor;
+
+        while (stack.length > 0) {
+            const [gx, gy] = stack.pop();
+            const key = `${gx},${gy}`;
+            
+            if (visited.has(key) || gx < 0 || gx >= gridSize || gy < 0 || gy >= gridSize) {
+                continue;
+            }
+            
+            const pos = (gy * pixelSize * canvas.width + gx * pixelSize) * 4;
+            const r = data[pos];
+            const g = data[pos + 1];
+            const b = data[pos + 2];
+            const a = data[pos + 3];
+            
+            if (r === startR && g === startG && b === startB && a === startA) {
+                ctx.fillRect(gx * pixelSize, gy * pixelSize, pixelSize, pixelSize);
+                visited.add(key);
+                
+                stack.push([gx + 1, gy]);
+                stack.push([gx - 1, gy]);
+                stack.push([gx, gy + 1]);
+                stack.push([gx, gy - 1]);
+            }
+        }
+    }
+
+    function drawPixel(e) {
+        if (!isDrawing && currentTool === 'pen') return;
+        const rect = canvas.getBoundingClientRect();
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+        
+        
+        if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+            e.preventDefault(); 
+        }
+
+        const x = Math.floor((clientX - rect.left) / pixelSize) * pixelSize;
+        const y = Math.floor((clientY - rect.top) / pixelSize) * pixelSize;
+        
+        if (currentTool === 'bucket' && e.type === 'mousedown') {
+            fillPixel(clientX - rect.left, clientY - rect.top);
+        } else if (currentTool === 'pen') {
+            ctx.fillStyle = currentColor;
+            ctx.fillRect(x, y, pixelSize, pixelSize);
+        }
+    }
+
+    canvas.addEventListener('mousedown', (e) => { 
+        if(currentTool === 'pen') isDrawing = true; 
+        drawPixel(e); 
+    });
+    canvas.addEventListener('mousemove', drawPixel);
+    window.addEventListener('mouseup', () => isDrawing = false);
+    
+    canvas.addEventListener('touchstart', (e) => { 
+        if(currentTool === 'pen') isDrawing = true; 
+        if(currentTool === 'bucket') {
+            const rect = canvas.getBoundingClientRect();
+            fillPixel(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+        } else {
+            drawPixel(e); 
+        }
+    }, {passive: false});
+    canvas.addEventListener('touchmove', drawPixel, {passive: false});
+    window.addEventListener('touchend', () => isDrawing = false);
+
+
+    
+    let p1 = null; let p2 = null;
+    let isBattling = false;
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+
+        if (tabId === 'learn') {
+            document.getElementById('learn_current_char').innerText = document.getElementById('c_name').value || "名無し";
+        }
+    }
+
+    function parseMoveAsset(assetValue) {
+        switch(assetValue) {
+            case 'atk_low': return { type: 'attack', power: 10, mpCost: 0 };
+            case 'atk_mid': return { type: 'attack', power: 30, mpCost: 15 };
+            case 'atk_high': return { type: 'attack', power: 50, mpCost: 30 };
+            case 'heal_low': return { type: 'heal', power: 30, mpCost: 10 };
+            case 'heal_mid': return { type: 'heal', power: 50, mpCost: 20 };
+            case 'heal_high': return { type: 'heal', power: 80, mpCost: 40 };
+            default: return { type: 'attack', power: 10, mpCost: 0 };
+        }
+    }
+
+    function exportJSON() {
+        
+        const imageData = canvas.toDataURL('image/png');
+        
+        const move1 = parseMoveAsset(document.getElementById('m1_asset').value);
+        move1.name = document.getElementById('m1_name').value;
+        const move2 = parseMoveAsset(document.getElementById('m2_asset').value);
+        move2.name = document.getElementById('m2_name').value;
+        const move3 = parseMoveAsset(document.getElementById('m3_asset').value);
+        move3.name = document.getElementById('m3_name').value;
+
+        const charData = {
+            name: document.getElementById('c_name').value,
+            author: document.getElementById('c_author').value,
+            maxHp: parseInt(document.getElementById('c_hp').value),
+            maxMp: parseInt(document.getElementById('c_mp').value),
+            image: imageData,
+            moves: [move1, move2, move3],
+            aiConfig: learnedAI
+        };
+        const blob = new Blob([JSON.stringify(charData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = charData.name + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert("JSONを保存しました！");
+    }
+
+    function loadCharacter(playerNum, jsonText) {
+        try {
+            const charData = JSON.parse(jsonText);
+            charData.hp = charData.maxHp; charData.mp = charData.maxMp;
+
+            if (playerNum === 1) {
+                p1 = charData; document.getElementById('setup_p1').innerText = charData.name + " 完了!";
+            } else {
+                p2 = charData; document.getElementById('setup_p2').innerText = charData.name + " 完了!";
+            }
+            updateUI(playerNum, charData);
+        } catch (e) { alert("データが正しくありません！"); }
+    }
+
+    document.getElementById('file_p1').addEventListener('change', function(e) {
+        if(e.target.files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                loadCharacter(1, evt.target.result);
+                e.target.value = ''; 
+            };
+            reader.readAsText(e.target.files[0]);
+        }
+    });
+
+    document.getElementById('file_p2').addEventListener('change', function(e) {
+        if(e.target.files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                loadCharacter(2, evt.target.result);
+                e.target.value = ''; 
+            };
+            reader.readAsText(e.target.files[0]);
+        }
+    });
+
+    function matchAssetValue(move) {
+        if(move.type === 'attack') {
+            if(move.power >= 50) return 'atk_high';
+            if(move.power >= 30) return 'atk_mid';
+            return 'atk_low';
+        } else {
+            if(move.power >= 80) return 'heal_high';
+            if(move.power >= 50) return 'heal_mid';
+            return 'heal_low';
+        }
+    }
+
+    document.getElementById('file_edit').addEventListener('change', function(e) {
+        if(e.target.files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const charData = JSON.parse(evt.target.result);
+                    document.getElementById('c_name').value = charData.name || "";
+                    document.getElementById('c_author').value = charData.author || "";
+                    
+                    const hp = charData.maxHp || 100;
+                    const mp = charData.maxMp || 50;
+                    document.getElementById('c_hp_range').value = hp;
+                    document.getElementById('c_hp_val').innerText = hp;
+                    document.getElementById('c_mp_range').value = mp;
+                    document.getElementById('c_mp_val').innerText = mp;
+                    document.getElementById('c_hp').value = hp;
+                    document.getElementById('c_mp').value = mp;
+
+                    for(let i=0; i<3; i++) {
+                        if(charData.moves && charData.moves[i]) {
+                            document.getElementById(`m${i+1}_name`).value = charData.moves[i].name;
+                            document.getElementById(`m${i+1}_asset`).value = matchAssetValue(charData.moves[i]);
+                        }
+                    }
+
+                    if (charData.image) {
+                        const img = new Image();
+                        img.onload = () => {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(img, 0, 0);
+                        };
+                        img.src = charData.image;
+                    }
+
+                    if(charData.aiConfig) {
+                        learnedAI = charData.aiConfig;
+                    } else {
+                        learnedAI = null;
+                    }
+
+                    alert("データを読み込みました！");
+                } catch(err) {
+                    alert("データが正しくありません");
+                }
+                e.target.value = ''; 
+            };
+            reader.readAsText(e.target.files[0]);
+        }
+    });
+
+    function loadSample() {
+        
+        const dummyImg = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
+        const sample1 = { name: "レッド", author: "公式", maxHp: 120, maxMp: 40, hp: 120, mp: 40, image: dummyImg, moves: [ {name:"パンチ", type:"attack", power:15, mpCost:0}, {name:"ファイア", type:"attack", power:40, mpCost:20}, {name:"やくそう", type:"heal", power:30, mpCost:15} ] };
+        const sample2 = { name: "ブルー", author: "公式", maxHp: 100, maxMp: 80, hp: 100, mp: 80, image: dummyImg, moves: [ {name:"キック", type:"attack", power:10, mpCost:0}, {name:"ブリザド", type:"attack", power:50, mpCost:25}, {name:"ヒール", type:"heal", power:40, mpCost:20} ] };
+        
+        loadCharacter(1, JSON.stringify(sample1));
+        loadCharacter(2, JSON.stringify(sample2));
+        switchTab('battle'); 
+    }
+
+    function updateUI(pNum, char) {
+        document.getElementById(`author${pNum}`).innerText = char.author;
+        if(char.image) document.getElementById(`img${pNum}`).src = char.image;
+        
+        const hpPercent = Math.max(0, (char.hp / char.maxHp) * 100);
+        const mpPercent = Math.max(0, (char.mp / char.maxMp) * 100);
+        
+        document.getElementById(`hp-bar${pNum}`).style.height = hpPercent + '%';
+        document.getElementById(`mp-bar${pNum}`).style.height = mpPercent + '%';
+
+        for(let i=0; i<3; i++) {
+            const wrapper = document.getElementById(`move-wrap${pNum}-${i}`);
+            if(char.moves && char.moves[i] && wrapper) {
+                const move = char.moves[i];
+                wrapper.innerHTML = move.name + `<div class="move-icon" id="icon${pNum}-${i}">${move.type === 'attack' ? '⚔️' : '➕'}</div>`;
+            }
+        }
+    }
+
+    function addLog(text, color = "#334155") {
+        const logBox = document.getElementById('battle-log');
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.style.color = color;
+        entry.innerHTML = text;
+        logBox.appendChild(entry);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    
+    async function highlightMove(pNum, moveIndex) {
+        const icon = document.getElementById(`icon${pNum}-${moveIndex}`);
+        icon.classList.add('active');
+        await sleep(600);
+        icon.classList.remove('active');
+    }
+
+    function shakeCard(pNum) {
+        const card = document.getElementById(`card${pNum}`);
+        card.classList.add('shaking');
+        setTimeout(() => card.classList.remove('shaking'), 300);
+    }
+
+    async function startBattle() {
+        if (!p1 || !p2) { alert("キャラ読込タブで、上と下にキャラをセットしてね！"); return; }
+        if (isBattling) return;
+
+        isBattling = true;
+        document.getElementById('start-btn').style.display = 'none';
+        document.getElementById('battle-log').innerHTML = ''; 
+        
+        p1.hp = p1.maxHp; p1.mp = p1.maxMp; p2.hp = p2.maxHp; p2.mp = p2.maxMp;
+        updateUI(1, p1); updateUI(2, p2);
+
+        addLog(`⚔️ ${p1.name} VS ${p2.name} ⚔️`, "#dc2626");
+        await sleep(1000);
+
+        let attacker = p1, defender = p2, attackerNum = 1, defenderNum = 2;
+
+        while (p1.hp > 0 && p2.hp > 0) {
+            let availableMoves = attacker.moves.filter(m => m.mpCost <= attacker.mp);
+            if (availableMoves.length === 0) availableMoves = [{ name: "わるあがき", type: "attack", power: 1, mpCost: 0 }];
+            
+            let move = availableMoves[0];
+            if (attacker.aiConfig && availableMoves.length > 1) {
+                let bestScore = -Infinity;
+                let currentHpPercent = attacker.hp / attacker.maxHp;
+                for (let m of availableMoves) {
+                    let weight = attacker.aiConfig.weights[m.name];
+                    if(weight) {
+                        let score = weight.basePreference;
+                        if(m.type === 'heal' && currentHpPercent < weight.preferredHpThreshold) {
+                            score += 0.5; 
+                        }
+                        if(score > bestScore) {
+                            bestScore = score;
+                            move = m;
+                        }
+                    } else {
+                        
+                        let randomScore = Math.random();
+                        if(randomScore > bestScore) {
+                            bestScore = randomScore;
+                            move = m;
+                        }
+                    }
+                }
+            } else {
+                let moveIndex = Math.floor(Math.random() * availableMoves.length);
+                move = availableMoves[moveIndex];
+            }
+            
+            let originalIndex = attacker.moves.indexOf(move);
+            if(originalIndex === -1) originalIndex = 0; 
+
+            addLog(`▶ <b>${attacker.name}</b> の<br>　【${move.name}】！`, "#1e40af");
+            attacker.mp -= move.mpCost;
+            updateUI(attackerNum, attacker);
+            
+            
+            await highlightMove(attackerNum, originalIndex);
+
+            if (move.type === 'attack') {
+                let dmg = Math.floor(move.power * (0.8 + Math.random() * 0.4));
+                defender.hp -= dmg;
+                shakeCard(defenderNum); 
+                addLog(`💥 <b>${defender.name}</b> に ${dmg} のダメージ！`, "#ef4444");
+            } else if (move.type === 'heal') {
+                let heal = Math.floor(move.power * (0.8 + Math.random() * 0.4));
+                attacker.hp = Math.min(attacker.maxHp, attacker.hp + heal);
+                addLog(`✨ <b>${attacker.name}</b> は ${heal} 回復した！`, "#16a34a");
+            }
+
+            updateUI(attackerNum, attacker);
+            updateUI(defenderNum, defender);
+            await sleep(1000);
+
+            if (defender.hp > 0) {
+                
+                [attacker, defender] = [defender, attacker];
+                [attackerNum, defenderNum] = [defenderNum, attackerNum];
+            }
+        }
+
+        let winner = p1.hp > 0 ? p1 : p2;
+        addLog(`🏆 勝者：<b>${winner.name}</b> ！！`, "#d97706");
+        
+        isBattling = false;
+        document.getElementById('start-btn').style.display = 'block';
+        document.getElementById('start-btn').innerText = 'もういちど！';
+    }
+    const hpRange = document.getElementById('c_hp_range');
+    const mpRange = document.getElementById('c_mp_range');
+    const hpVal = document.getElementById('c_hp_val');
+    const mpVal = document.getElementById('c_mp_val');
+    const c_hp = document.getElementById('c_hp');
+    const c_mp = document.getElementById('c_mp');
+    const TOTAL_STATS = 150;
+
+    hpRange.addEventListener('input', (e) => {
+        let hp = parseInt(e.target.value);
+        let mp = TOTAL_STATS - hp;
+        
+        mpRange.value = mp;
+        hpVal.innerText = hp;
+        mpVal.innerText = mp;
+        
+        c_hp.value = hp;
+        c_mp.value = mp;
+    });
+
+
+    
+    let learnedAI = null;
+
+    function buildCharFromCreator() {
+        const move1 = parseMoveAsset(document.getElementById('m1_asset').value);
+        move1.name = document.getElementById('m1_name').value;
+        const move2 = parseMoveAsset(document.getElementById('m2_asset').value);
+        move2.name = document.getElementById('m2_name').value;
+        const move3 = parseMoveAsset(document.getElementById('m3_asset').value);
+        move3.name = document.getElementById('m3_name').value;
+
+        return {
+            name: document.getElementById('c_name').value,
+            author: document.getElementById('c_author').value,
+            maxHp: parseInt(document.getElementById('c_hp').value),
+            maxMp: parseInt(document.getElementById('c_mp').value),
+            hp: parseInt(document.getElementById('c_hp').value),
+            mp: parseInt(document.getElementById('c_mp').value),
+            moves: [move1, move2, move3],
+            aiConfig: null
+        };
+    }
+
+    function runHeadlessBattle(attacker, defender) {
+        attacker.hp = attacker.maxHp; attacker.mp = attacker.maxMp;
+        defender.hp = defender.maxHp; defender.mp = defender.maxMp;
+        let turns = 0;
+        
+        while (attacker.hp > 0 && defender.hp > 0 && turns < 100) {
+            
+            let dMoves = defender.moves.filter(m => m.mpCost <= defender.mp);
+            if(dMoves.length === 0) dMoves = [{ type: 'attack', power: 1, mpCost: 0 }];
+            let dMove = dMoves[Math.floor(Math.random() * dMoves.length)];
+            defender.mp -= dMove.mpCost;
+            if(dMove.type === 'attack') {
+                attacker.hp -= Math.floor(dMove.power * (0.8 + Math.random() * 0.4));
+            } else {
+                defender.hp = Math.min(defender.maxHp, defender.hp + Math.floor(dMove.power * (0.8 + Math.random() * 0.4)));
+            }
+
+            if(attacker.hp <= 0) break;
+
+            
+            let aMoves = attacker.moves.filter(m => m.mpCost <= attacker.mp);
+            if(aMoves.length === 0) aMoves = [{ type: 'attack', power: 1, mpCost: 0 }];
+            
+            let aMove = aMoves[0];
+            // Epsilon-greedy: 80% use learned weights if available, 20% random exploration
+            if (attacker.aiConfig && Math.random() > 0.2 && aMoves.length > 1) {
+                let bestScore = -Infinity;
+                let currentHpPercent = attacker.hp / attacker.maxHp;
+                for (let m of aMoves) {
+                    let weight = attacker.aiConfig.weights[m.name];
+                    if (weight) {
+                        let score = weight.basePreference;
+                        if (m.type === 'heal' && currentHpPercent < weight.preferredHpThreshold) {
+                            score += 0.5;
+                        }
+                        if (score > bestScore) {
+                            bestScore = score;
+                            aMove = m;
+                        }
+                    } else {
+                        let randScore = Math.random();
+                        if (randScore > bestScore) {
+                            bestScore = randScore;
+                            aMove = m;
+                        }
+                    }
+                }
+            } else {
+                let aMoveIdx = Math.floor(Math.random() * aMoves.length);
+                aMove = aMoves[aMoveIdx];
+            }
+            
+            attacker.mp -= aMove.mpCost;
+            
+            
+            let state = { hpPercent: attacker.hp / attacker.maxHp };
+            if(!attacker.history) attacker.history = [];
+            attacker.history.push({ state: state, moveName: aMove.name || "わるあがき" });
+
+            if(aMove.type === 'attack') {
+                defender.hp -= Math.floor(aMove.power * (0.8 + Math.random() * 0.4));
+            } else {
+                attacker.hp = Math.min(attacker.maxHp, attacker.hp + Math.floor(aMove.power * (0.8 + Math.random() * 0.4)));
+            }
+            turns++;
+        }
+        return attacker.hp > 0;
+    }
+
+    function startLearning() {
+        const logBox = document.getElementById('learn_log');
+        logBox.innerHTML = "学習を開始しています...<br>";
+        
+        const baseChar = buildCharFromCreator();
+        
+        
+        const enemy = { 
+            name: "仮想敵", maxHp: 100, maxMp: 100, hp: 100, mp: 100, 
+            moves: [ 
+                {name:"攻撃", type:"attack", power:30, mpCost:0},
+                {name:"回復", type:"heal", power:40, mpCost:20}
+            ] 
+        };
+
+        let totalGames = 1000;
+        let winsThisSession = 0;
+        
+        // Initialize or load previous training data
+        if (!learnedAI) {
+            learnedAI = { weights: {}, trainingData: { totalGames: 0, totalWins: 0, moveStats: {} } };
+        }
+        
+        let tData = learnedAI.trainingData;
+        
+        for(let m of baseChar.moves) {
+            if(!tData.moveStats[m.name]) {
+                tData.moveStats[m.name] = { uses: 0, wins: 0, hpStateWhenUsed: 0 };
+            }
+        }
+
+        for (let i = 0; i < totalGames; i++) {
+            let myChar = JSON.parse(JSON.stringify(baseChar));
+            // myChar needs access to its current learning to make better decisions during training
+            myChar.aiConfig = learnedAI; 
+            
+            // Randomize enemy slightly to teach diverse situations
+            let myEnemy = JSON.parse(JSON.stringify(enemy));
+            myEnemy.maxHp = 80 + Math.floor(Math.random() * 60);
+            myEnemy.hp = myEnemy.maxHp;
+            myEnemy.maxMp = 50 + Math.floor(Math.random() * 50);
+            myEnemy.mp = myEnemy.maxMp;
+            // random chance to have high attack or high heal
+            myEnemy.moves[0].power = 20 + Math.floor(Math.random() * 30);
+            myEnemy.moves[1].power = 30 + Math.floor(Math.random() * 40);
+
+            myChar.history = [];
+            
+            let won = runHeadlessBattle(myChar, myEnemy);
+            if (won) {
+                winsThisSession++;
+                tData.totalWins++;
+            }
+            tData.totalGames++;
+
+            for (let act of myChar.history) {
+                if(tData.moveStats[act.moveName]) {
+                    tData.moveStats[act.moveName].uses++;
+                    if(won) {
+                        tData.moveStats[act.moveName].wins++;
+                        tData.moveStats[act.moveName].hpStateWhenUsed += act.state.hpPercent;
+                    }
+                }
+            }
+        }
+
+        // Recalculate AI Config weights
+        for (let m in tData.moveStats) {
+            let stats = tData.moveStats[m];
+            let winRate = stats.uses > 0 ? (stats.wins / stats.uses) : 0.5;
+            let avgHpState = stats.wins > 0 ? (stats.hpStateWhenUsed / stats.wins) : 0.5;
+            learnedAI.weights[m] = { 
+                basePreference: winRate,
+                preferredHpThreshold: avgHpState 
+            };
+        }
+        
+        logBox.innerHTML += `=== 学習セッション完了 ===<br>`;
+        logBox.innerHTML += `総対戦回数(累計): ${tData.totalGames}回<br>`;
+        logBox.innerHTML += `今回の勝率: ${((winsThisSession/totalGames)*100).toFixed(1)}%<br>`;
+        logBox.innerHTML += `累計勝率: ${((tData.totalWins/tData.totalGames)*100).toFixed(1)}%<br>`;
+        logBox.innerHTML += `【現在のAI評価値】<br>`;
+        for(let w in learnedAI.weights) {
+            logBox.innerHTML += `- ${w}: 優先度 ${(learnedAI.weights[w].basePreference*100).toFixed(0)} (最適HP: ${(learnedAI.weights[w].preferredHpThreshold*100).toFixed(0)}%)<br>`;
+        }
+    }
+
+    function exportLearnedJSON() {
+        if (!learnedAI) {
+            alert("先に高速学習を実行してね！");
+            return;
+        }
+        const charData = buildCharFromCreator();
+        charData.image = canvas.toDataURL('image/png');
+        charData.aiConfig = learnedAI;
+
+        const blob = new Blob([JSON.stringify(charData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = charData.name + '_learned.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert("学習済みJSONを保存しました！");
+    }
+
+
+</script>
+</body>
+</html>
