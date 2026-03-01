@@ -70,6 +70,14 @@
     .shaking { animation: shake 0.3s ease-in-out; }
 </style>
 </head>
+<link rel="apple-touch-icon" href="icon192x192.png">
+<link rel="icon" href="icon192x192.png">
+<link rel="manifest" href="manifest.json">
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+</script>
 <body>
 
 <div class="nav-tabs">
