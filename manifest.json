@@ -1,6 +1,6 @@
 {
-    "name": "PWA sample program",
-    "short_name": "PWA sample",
+    "name": "fooorest",
+    "short_name": "fooorest",
     "start_url": "index.html",
     "display": "standalone",
     "icons": [
