@@ -672,10 +672,14 @@ if ('serviceWorker' in navigator) {
             await highlightMove(attackerNum, originalIndex);
 
             if (move.type === 'attack') {
-                let dmg = Math.floor(move.power * (0.8 + Math.random() * 0.4));
-                defender.hp -= dmg;
-                shakeCard(defenderNum); 
-                addLog(`💥 <b>${defender.name}</b> に ${dmg} のダメージ！`, "#ef4444");
+                if (defender.winner === true) {
+                    addLog(`✨ <b>${defender.name}</b>は不思議な力で護られた！`, "#10b981");
+                } else {
+                    let dmg = Math.floor(move.power * (0.8 + Math.random() * 0.4));
+                    defender.hp -= dmg;
+                    shakeCard(defenderNum); 
+                    addLog(`💥 <b>${defender.name}</b> に ${dmg} のダメージ！`, "#ef4444");
+                }
             } else if (move.type === 'heal') {
                 let heal = Math.floor(move.power * (0.8 + Math.random() * 0.4));
                 attacker.hp = Math.min(attacker.maxHp, attacker.hp + heal);
@@ -756,7 +760,9 @@ if ('serviceWorker' in navigator) {
             let dMove = dMoves[Math.floor(Math.random() * dMoves.length)];
             defender.mp -= dMove.mpCost;
             if(dMove.type === 'attack') {
-                attacker.hp -= Math.floor(dMove.power * (0.8 + Math.random() * 0.4));
+                if (attacker.winner !== true) {
+                    attacker.hp -= Math.floor(dMove.power * (0.8 + Math.random() * 0.4));
+                }
             } else {
                 defender.hp = Math.min(defender.maxHp, defender.hp + Math.floor(dMove.power * (0.8 + Math.random() * 0.4)));
             }
@@ -804,7 +810,9 @@ if ('serviceWorker' in navigator) {
             attacker.history.push({ state: state, moveName: aMove.name || "わるあがき" });
 
             if(aMove.type === 'attack') {
-                defender.hp -= Math.floor(aMove.power * (0.8 + Math.random() * 0.4));
+                if (defender.winner !== true) {
+                    defender.hp -= Math.floor(aMove.power * (0.8 + Math.random() * 0.4));
+                }
             } else {
                 attacker.hp = Math.min(attacker.maxHp, attacker.hp + Math.floor(aMove.power * (0.8 + Math.random() * 0.4)));
             }
