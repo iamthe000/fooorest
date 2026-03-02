@@ -42,14 +42,22 @@
         justify-content: center;
         align-items: center;
     }
+    .editor-wrapper.fullscreen #canvas-area-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
     .editor-wrapper.fullscreen .canvas-container {
+        width: 70vmin;
+        height: 70vmin;
         max-width: 90vw;
         max-height: 70vh;
-        overflow: auto;
+        overflow: hidden; /* Hide scrollbars, we use custom sliders */
         border: 4px solid #1e293b;
         border-radius: 12px;
         background: #222;
         display: block;
+        position: relative;
     }
     .editor-wrapper.fullscreen canvas {
         width: calc(70vmin * var(--zoom, 1)) !important; 
@@ -131,8 +139,14 @@ if ('serviceWorker' in navigator) {
         
         <div class="editor-wrapper">
             <h3 style="font-size: 14px;">ドット絵をかこう！</h3>
-            <div class="canvas-container">
-                <canvas id="pixelCanvas" width="160" height="160"></canvas>
+            <div id="canvas-area-wrapper">
+                <div style="display: flex; align-items: stretch; justify-content: center;">
+                    <div class="canvas-container" id="canvas-scroll-container">
+                        <canvas id="pixelCanvas" width="160" height="160"></canvas>
+                    </div>
+                    <input type="range" id="pan-y-slider" orient="vertical" min="0" max="100" value="0" style="display: none; -webkit-appearance: slider-vertical; width: 20px; margin-left: 10px;" oninput="updatePan()">
+                </div>
+                <input type="range" id="pan-x-slider" min="0" max="100" value="0" style="display: none; width: 100%; margin-top: 10px;" oninput="updatePan()">
             </div>
             <div id="zoom-controls" style="display: none; margin-top: 10px; color: white;">
                 <label>拡大: <span id="zoom-val">1.0x</span></label>
@@ -444,9 +458,38 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('touchend', () => isDrawing = false);
 
 
+    function updatePan() {
+        const container = document.getElementById('canvas-scroll-container');
+        const sliderX = document.getElementById('pan-x-slider');
+        const sliderY = document.getElementById('pan-y-slider');
+        
+        // maximum scrollable amount
+        const maxX = container.scrollWidth - container.clientWidth;
+        const maxY = container.scrollHeight - container.clientHeight;
+        
+        container.scrollLeft = (sliderX.value / 100) * maxX;
+        container.scrollTop = (sliderY.value / 100) * maxY;
+    }
+
     function updateZoom(val) {
         document.documentElement.style.setProperty('--zoom', val);
         document.getElementById('zoom-val').innerText = parseFloat(val).toFixed(1) + 'x';
+        
+        const sliderX = document.getElementById('pan-x-slider');
+        const sliderY = document.getElementById('pan-y-slider');
+        
+        if (val > 1) {
+            sliderX.style.display = 'block';
+            sliderY.style.display = 'block';
+        } else {
+            sliderX.style.display = 'none';
+            sliderY.style.display = 'none';
+            sliderX.value = 0;
+            sliderY.value = 0;
+        }
+        
+        // Give the DOM a tiny bit of time to calculate new scrollWidth/scrollHeight
+        setTimeout(updatePan, 10);
     }
 
     function toggleFullscreen() {
