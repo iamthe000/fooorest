@@ -745,6 +745,8 @@ if ('serviceWorker' in navigator) {
         await sleep(1000);
 
         let attacker = p1, defender = p2, attackerNum = 1, defenderNum = 2;
+        p1.consecutiveStruggles = 0;
+        p2.consecutiveStruggles = 0;
 
         while (p1.hp > 0 && p2.hp > 0) {
             let availableMoves = attacker.moves.filter(m => m.mpCost <= attacker.mp);
@@ -784,6 +786,18 @@ if ('serviceWorker' in navigator) {
 
             addLog(`▶ <b>${attacker.name}</b> の<br>　【${move.name}】！`, "#1e40af");
             attacker.mp -= move.mpCost;
+            
+            if (move.name === "わるあがき" && attacker.mp === 0) {
+                attacker.consecutiveStruggles = (attacker.consecutiveStruggles || 0) + 1;
+            } else {
+                attacker.consecutiveStruggles = 0;
+            }
+            if (attacker.consecutiveStruggles >= 3) {
+                attacker.mp = Math.min(attacker.maxMp, attacker.mp + 3);
+                attacker.consecutiveStruggles = 0;
+                addLog(`✨ <b>${attacker.name}</b> は気合でMPを3回復した！`, "#16a34a");
+            }
+
             updateUI(attackerNum, attacker);
             
             
@@ -870,6 +884,8 @@ if ('serviceWorker' in navigator) {
         attacker.hp = attacker.maxHp; attacker.mp = attacker.maxMp;
         defender.hp = defender.maxHp; defender.mp = defender.maxMp;
         let turns = 0;
+        attacker.consecutiveStruggles = 0;
+        defender.consecutiveStruggles = 0;
         
         while (attacker.hp > 0 && defender.hp > 0 && turns < 100) {
             
@@ -877,6 +893,18 @@ if ('serviceWorker' in navigator) {
             if(dMoves.length === 0) dMoves = [{ type: 'attack', power: 1, mpCost: 0 }];
             let dMove = dMoves[Math.floor(Math.random() * dMoves.length)];
             defender.mp -= dMove.mpCost;
+            
+            let dMoveName = dMove.name || "わるあがき";
+            if (dMoveName === "わるあがき" && defender.mp === 0) {
+                defender.consecutiveStruggles = (defender.consecutiveStruggles || 0) + 1;
+            } else {
+                defender.consecutiveStruggles = 0;
+            }
+            if (defender.consecutiveStruggles >= 3) {
+                defender.mp = Math.min(defender.maxMp, defender.mp + 3);
+                defender.consecutiveStruggles = 0;
+            }
+
             if(dMove.type === 'attack') {
                 if (attacker.winner !== true) {
                     attacker.hp -= Math.floor(dMove.power * (0.8 + Math.random() * 0.4));
@@ -922,6 +950,16 @@ if ('serviceWorker' in navigator) {
             
             attacker.mp -= aMove.mpCost;
             
+            let aMoveName = aMove.name || "わるあがき";
+            if (aMoveName === "わるあがき" && attacker.mp === 0) {
+                attacker.consecutiveStruggles = (attacker.consecutiveStruggles || 0) + 1;
+            } else {
+                attacker.consecutiveStruggles = 0;
+            }
+            if (attacker.consecutiveStruggles >= 3) {
+                attacker.mp = Math.min(attacker.maxMp, attacker.mp + 3);
+                attacker.consecutiveStruggles = 0;
+            }
             
             let state = { hpPercent: attacker.hp / attacker.maxHp };
             if(!attacker.history) attacker.history = [];
